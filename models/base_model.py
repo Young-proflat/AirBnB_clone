@@ -1,55 +1,60 @@
 #!/usr/bin/python3
 """
-BaseModel Module
+base_model module
 """
 import uuid
-from . import storage
 from datetime import datetime
-class BaseModel:
+from . import storage
+
+
+class BaseModel():
     """
-    declaring the class
+    class BaseModel
     """
+
     def __init__(self, *args, **kwargs):
         """
-        instantiating new object
+        instantiating new obj
         """
-        for attribute, value in kwargs.items():
-            if attribute == "__class__":
-                continue
-            if attribute == "created_at" or attribute == "updated_at":
-                self.attribute = (datetime.fromisoformat(value))
-            else :
-                self.attribute = value
+        if kwargs:
+            for attr, value in kwargs.items():
+                if attr == "__class__":
+                    continue
+                if attr == "created_at" or attr == "updated_at":
+                    setattr(self, attr, (datetime.fromisoformat(value)))
+                else:
+                    setattr(self, attr, value)
         else:
-            self.id = (uuid.uuid4())
-            self.created_at = (datetime.now())
-            self.updated_at = (datetime.now())
+            self.id = str(uuid.uuid4())
+            self.created_at = self.updated_at = (datetime.now())
             storage.new(self)
-            
+
     def __str__(self):
         """
-        to return attribute in string format
+        string representation of obj
         """
-        return(f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}")
-    
+        return (f"[{self.__class__.__name__}] ({self.id}) {self.__dict__}")
+
     def save(self):
         """
-        updating the instant public 
-        attribute with the current database
+        update the updated_at attribute
+        to the last time the obj was saved
         """
-        storage.safe()
+        storage.save()
         self.updated_at = datetime.now()
-        
+
     def to_dict(self):
         """
-        This method returns key and value
-        in dictionary format
+        edited default dictionary
+        representation of object
+        Returns: dict. attribute as
+        key and attribute values as value
         """
         Dictionary = {}
-        for attribute, value in self.__dict__.items():
-            if attribute == "updated_at" or attribute == "created_at":
-                Dictionary[attribute] = value.isoformat()
+        for attr, value in self.__dict__.items():
+            if attr == "updated_at" or attr == "created_at":
+                Dictionary[attr] = value.isoformat()
             else:
-                Dictionary[attribute] = value
-                Dictionary[__class__] = self.__class__.__name__
-                return Dictionary
+                Dictionary[attr] = value
+        Dictionary["__class__"] = self.__class__.__name__
+        return Dictionary
